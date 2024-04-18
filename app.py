@@ -16,13 +16,38 @@ model = keras.models.load_model('Brain_Tumor_Model.keras')
 def test():
     return jsonify({'/classify': "Use this route to submit images, the response is the classification."})
 
+@app.route('/submit_image', methods=['POST'])
+def uploadImage():
+    """
+            Uploaded brain scan image.
+
+            This function expects a POST request with a file upload containing a brain scan image.
+            It saves the uploaded image to a predefined directory.
+
+            Returns:
+                - If successful:
+                    - A path to the image.
+                    - HTTP status code 200 (OK).
+                - If the image is not provided in the request:
+                    - A JSON response indicating that an image needs to be submitted.
+                    - HTTP status code 400 (Bad Request).
+            """
+
+    image = request.files.get('img')
+    if not image:
+        return jsonify({'failed': 'Please submit an image'}), 400
+
+    img_name = secure_filename(image.filename)
+    image.save('./public/image/{}'.format(img_name))
+    return jsonify({"img": './public/image/{}'.format(img_name)})
+
 @app.route('/classify', methods=['POST'])
 def submit_and_classify():
     """
         Process an uploaded brain scan image to classify whether it contains a tumor or not.
 
-        This function expects a POST request with a file upload containing a brain scan image.
-        It saves the uploaded image to a predefined directory, preprocesses it for classification,
+        This function expects a POST request with json data containing the path to a brain scan image.
+        It preprocesses it for classification,
         and then uses a pre-trained machine learning model to predict whether the brain scan
         contains a tumor or not.
 
@@ -40,14 +65,8 @@ def submit_and_classify():
         """
 
     try:
-        image = request.files.get('img')
-        if not image:
-            return jsonify({'failed': 'Please submit an image'}), 400
-
-        img_name = secure_filename(image.filename)
-        image.save('./public/image/{}'.format(img_name))
-
-        new_img = cv2.imread('./public/image/{}'.format(img_name))
+        req_data = request.json
+        new_img = cv2.imread(req_data['img'])
         if new_img is None:
             return jsonify(({"failed": "Failed to read image file"})), 500
 
@@ -59,7 +78,7 @@ def submit_and_classify():
         verdict = 'This brain scan contains a tumor' if classification == 1 else 'This brain scan does not contain a tumor'
 
         return jsonify({
-            "img": './public/image/{}'.format(img_name),
+            "img": req_data['img'],
             "result": verdict
         }), 200
     except Exception as e:
