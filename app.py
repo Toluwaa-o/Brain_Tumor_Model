@@ -39,7 +39,7 @@ def uploadImage():
 
     img_name = secure_filename(image.filename)
     image.save('./public/image/{}'.format(img_name))
-    return jsonify({"img": './public/image/{}'.format(img_name)})
+    return jsonify({"img": '/public/image/{}'.format(img_name)})
 
 @app.route('/classify', methods=['POST'])
 def submit_and_classify():
@@ -53,7 +53,6 @@ def submit_and_classify():
 
         Returns:
             - If successful:
-                - A path to the image.
                 - A message indicating whether the brain scan contains a tumor or not.
                 - HTTP status code 200 (OK).
             - If the image is not provided in the request:
@@ -78,7 +77,6 @@ def submit_and_classify():
         verdict = 'This brain scan contains a tumor' if classification == 1 else 'This brain scan does not contain a tumor'
 
         return jsonify({
-            "img": req_data['img'],
             "result": verdict
         }), 200
     except Exception as e:
