@@ -1,3 +1,4 @@
+import os
 import cv2
 import math
 import numpy as np
@@ -60,4 +61,10 @@ def submit_and_classify():
         return "An error occurred during image processing: {}".format(e), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, port=3000)
+    port = os.environ.get('PORT')
+    if port:
+        port = int(port)
+    else:
+        port = 5000
+
+    app.run(debug=True, port=port)
