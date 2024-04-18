@@ -8,7 +8,7 @@ from skimage.transform import resize
 from flask import Flask, jsonify, request
 from werkzeug.utils import secure_filename
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='public', static_url_path='/public')
 CORS(app)
 model = keras.models.load_model('Brain_Tumor_Model.keras')
 
@@ -28,6 +28,7 @@ def submit_and_classify():
 
         Returns:
             - If successful:
+                - A path to the image.
                 - A message indicating whether the brain scan contains a tumor or not.
                 - HTTP status code 200 (OK).
             - If the image is not provided in the request:
@@ -55,8 +56,12 @@ def submit_and_classify():
 
         pred = model(new_img)
         classification = math.ceil(pred[0][0]/100)
+        verdict = 'This brain scan contains a tumor' if classification == 1 else 'This brain scan does not contain a tumor'
 
-        return 'This brain scan contains a tumor' if classification == 1 else 'This brain scan does not contain a tumor', 200
+        return jsonify({
+            "img": './public/image/{}'.format(img_name),
+            "result": verdict
+        }), 200
     except Exception as e:
         return "An error occurred during image processing: {}".format(e), 500
 
